@@ -1,84 +1,86 @@
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.HashMap;
 import java.util.InputMismatchException;
-import java.util.List;
 
-public class EIFBF {
 
-	public static void main(String[] args) {
-		int n = ni();
-		int m = ni();
+import java.util.*;
 
-		Vertex[] vertices = readGraph(n, m);
-		StringBuilder sb = new StringBuilder();
-		HashMap<Integer, List<Integer>> map = new HashMap<>();
-
-		for (int i = 1; i < vertices.length; i++) {
-			Vertex vertex = vertices[i];
-			if (!vertex.visited) {
-				int index = vertex.id;
-				int male = 0;
-				int female = 0;
-				List<Vertex> list = new ArrayList<>();
-				List<Integer> genderList = new ArrayList<>();
-				list.add(vertex);
-				list = dfs(vertex, list);
-				for (Vertex v : list) {
-					index = v.id > index ? v.id : index;
-					if (v.gender.equals("Nam")) {
-						male++;
+class EIFBF {
+	static InputReader reader;
+	static StringBuilder sb = new StringBuilder();
+	static int maxID=0;
+	public static void main(String[] args) throws IOException {
+		reader = new InputReader(System.in);
+		Vertex[] FriendGraph = readGraph();
+		ArrayList<Vertex> components =  new ArrayList<Vertex>();
+		for (int i=1; i<FriendGraph.length; i++) {
+			if (FriendGraph[i].visited == false) {
+				int countNam = 0;
+				int countNu = 0;
+				List<Vertex> cc = new ArrayList<>();
+				DFS(FriendGraph[i], cc);
+				for (Vertex v : cc) {
+					if (v.gender.equalsIgnoreCase("Nam")) {
+						countNam++;
 					} else {
-						female++;
+						countNu++;
 					}
 				}
-				genderList.add(male);
-				genderList.add(female);
-				map.put(index, genderList);
+				Vertex prepresent = new Vertex(maxID, countNam, countNu);
+				components.add(prepresent);
+				maxID=0;
 			}
 		}
-		List<Integer> componentList = new ArrayList<>(map.keySet());
-		componentList.sort(Comparator.naturalOrder());
-		for (Integer i : componentList) {
-			int male = map.get(i).get(0);
-			int female = map.get(i).get(1);
-			sb.append(i + " ").append(male + " ").append(female + " ").append("\n");
+		components.sort((v1, v2)-> Integer.compare(v1.id, v2.id));
+		for (Vertex v : components) {
+			sb.append(v).append("\n");
 		}
-
 		System.out.println(sb);
 	}
-
-	static List<Vertex> dfs(Vertex vertex, List<Vertex> list) {
-		vertex.visited = true;
-		for (Vertex next : vertex.adjacentVertices) {
-			if (!next.visited) {
-				list.add(next);
-				list = dfs(next, list);
+	static void DFS(Vertex v,List<Vertex> cc) {
+		v.visited = true;
+		cc.add(v);
+		if (v.id>maxID) {
+			maxID = v.id;
+		}
+		for (Vertex w : v.adjecentVertices) {
+			if(w.visited == false) {
+				DFS(w, cc);
 			}
 		}
-		return list;
 	}
 
-	static Vertex[] readGraph(int n, int m) {
-		Vertex[] vertices = new Vertex[n + 1];
-		for (int i = 1; i <= n; i++) {
-			vertices[i] = new Vertex(i);
-			vertices[i].gender = ns();
-		}
+	static Vertex[] readGraph() {
+		int nVertices = reader.nextInt();
+		int nEdges = reader.nextInt();
 
-		for (int i = 0; i < m; i++) {
-			Vertex u = vertices[ni()];
-			Vertex v = vertices[ni()];
-			u.addVertex(v);
-			v.addVertex(u);
+		//Tao ra mảng để lưu các đỉnh và khởi tạo các đỉnh
+		Vertex[] vertices = new Vertex[nVertices+1];
+		for (int i = 1; i <= nVertices; ++i) {
+			vertices[i] = new Vertex(i, reader.next());
 		}
+		
+		//Doc lần lượt các cạnh
+		for (int i = 0; i < nEdges; ++i) {
+			int a = reader.nextInt();
+			int b = reader.nextInt();
 
-		for (int i = 1; i < vertices.length; i++) {
-			Vertex vertex = vertices[i];
-			vertex.adjacentVertices.sort((v1, v2) -> v1.id - v2.id);
+			//Đồ thị vô hướng nên cạnh  a-b nghĩa là: a kề của b, 
+			//b kề của a
+//			if (vertices[a].adjecentVertices.contains(vertices[b])){
+//				continue;
+//			} else {
+				vertices[a].addAdjecentVertex(vertices[b]);
+				vertices[b].addAdjecentVertex(vertices[a]);
+			//}
+//			vertices[a].addAdjecentVertex(vertices[b]);
+//			vertices[b].addAdjecentVertex(vertices[a]);
+		}
+		// Sắp xếp đỉnh kề theo id bé đến lớn
+		for (int i=1; i<=nVertices; i++) {
+			vertices[i].adjecentVertices.sort((v1, v2)-> Integer.compare(v1.id, v2.id));
 		}
 
 		return vertices;
@@ -86,114 +88,162 @@ public class EIFBF {
 
 	static class Vertex {
 		public int id;
-		public boolean visited = false;
+		int countNam;
+		int countNu;
+		public boolean visited;
 		public String gender;
-		public List<Vertex> adjacentVertices = new ArrayList<>();
+		public List<Vertex> adjecentVertices = new ArrayList<Vertex>();
 
-		public Vertex(int id) {
+		public Vertex(int id, String gender) {
 			this.id = id;
+			this.gender = gender;
+		}
+		public Vertex(int id, int nam, int nu) {
+			this.id = id;
+			this.countNam = nam;
+			this.countNu = nu;
 		}
 
-		public void addVertex(Vertex vertex) {
-			adjacentVertices.add(vertex);
+		public void addAdjecentVertex(Vertex vertex) {
+			adjecentVertices.add(vertex);
 		}
+
+		public int getDegree() {
+			return adjecentVertices.size();
+		}
+
+		@Override
+		public String toString() {
+			return id + " " + countNam + " " + countNu;
+		}
+
 	}
 
-	static InputStream is = System.in;
-	static byte[] inbuf = new byte[1 << 24];
-	static int lenbuf = 0, ptrbuf = 0;
+	static class InputReader {
+		private byte[] inbuf = new byte[2 << 23];
+		public int lenbuf = 0, ptrbuf = 0;
+		public InputStream is;
 
-	static int readByte() {
-		if (lenbuf == -1)
-			throw new InputMismatchException();
-		if (ptrbuf >= lenbuf) {
+		public InputReader(InputStream stream) throws IOException {
+
+			inbuf = new byte[2 << 23];
+			lenbuf = 0;
 			ptrbuf = 0;
-			try {
-				lenbuf = is.read(inbuf);
-			} catch (IOException e) {
+			is = System.in;
+			lenbuf = is.read(inbuf);
+		}
+
+		public InputReader(FileInputStream stream) throws IOException {
+			inbuf = new byte[2 << 23];
+			lenbuf = 0;
+			ptrbuf = 0;
+			is = stream;
+			lenbuf = is.read(inbuf);
+		}
+
+		public boolean hasNext() throws IOException {
+			if (skip() >= 0) {
+				ptrbuf--;
+				return true;
+			}
+			return false;
+		}
+
+		public String nextLine() throws IOException {
+			int b = skip();
+			StringBuilder sb = new StringBuilder();
+			while (!isSpaceChar(b) && b != ' ') { // when nextLine, ()
+				sb.appendCodePoint(b);
+				b = readByte();
+			}
+			return sb.toString();
+		}
+
+		public String next() {
+			int b = skip();
+			StringBuilder sb = new StringBuilder();
+			while (!(isSpaceChar(b))) { // when nextLine, (isSpaceChar(b) && b
+										// != ' ')
+				sb.appendCodePoint(b);
+				b = readByte();
+			}
+			return sb.toString();
+		}
+
+		private int readByte() {
+			if (lenbuf == -1)
 				throw new InputMismatchException();
+			if (ptrbuf >= lenbuf) {
+				ptrbuf = 0;
+				try {
+					lenbuf = is.read(inbuf);
+				} catch (IOException e) {
+					throw new InputMismatchException();
+				}
+				if (lenbuf <= 0)
+					return -1;
 			}
-			if (lenbuf <= 0)
-				return -1;
+			return inbuf[ptrbuf++];
 		}
-		return inbuf[ptrbuf++];
-	}
 
-	static boolean isSpaceChar(int c) {
-		return !(c >= 33 && c <= 126);
-	}
-
-	static int skip() {
-		int b;
-		while ((b = readByte()) != -1 && isSpaceChar(b))
-			;
-		return b;
-	}
-
-	static double nd() {
-		return Double.parseDouble(ns());
-	}
-
-	static char nc() {
-		return (char) skip();
-	}
-
-	static String ns() {
-		int b = skip();
-		StringBuilder sb = new StringBuilder();
-		while (!(isSpaceChar(b))) {
-			sb.appendCodePoint(b);
-			b = readByte();
+		private boolean isSpaceChar(int c) {
+			return !(c >= 33 && c <= 126);
 		}
-		return sb.toString();
-	}
 
-	static char[] ns(int n) {
-		char[] buf = new char[n];
-		int b = skip(), p = 0;
-		while (p < n && !(isSpaceChar(b))) {
-			buf[p++] = (char) b;
-			b = readByte();
+		private double nextDouble() {
+			return Double.parseDouble(next());
 		}
-		return n == p ? buf : Arrays.copyOf(buf, p);
-	}
 
-	static int ni() {
-		int num = 0, b;
-		boolean minus = false;
-		while ((b = readByte()) != -1 && !((b >= '0' && b <= '9') || b == '-'))
-			;
-		if (b == '-') {
-			minus = true;
-			b = readByte();
+		public Character nextChar() {
+			return skip() >= 0 ? (char) skip() : null;
 		}
-		while (true) {
-			if (b >= '0' && b <= '9') {
-				num = num * 10 + (b - '0');
-			} else {
-				return minus ? -num : num;
+
+		private int skip() {
+			int b;
+			while ((b = readByte()) != -1 && isSpaceChar(b))
+				;
+			return b;
+		}
+
+		public int nextInt() {
+			int num = 0, b;
+			boolean minus = false;
+			while ((b = readByte()) != -1 && !((b >= '0' && b <= '9') || b == '-'))
+				;
+			if (b == '-') {
+				minus = true;
+				b = readByte();
 			}
-			b = readByte();
-		}
-	}
 
-	static long nl() {
-		long num = 0;
-		int b;
-		boolean minus = false;
-		while ((b = readByte()) != -1 && !((b >= '0' && b <= '9') || b == '-'))
-			;
-		if (b == '-') {
-			minus = true;
-			b = readByte();
-		}
-		while (true) {
-			if (b >= '0' && b <= '9') {
-				num = num * 10 + (b - '0');
-			} else {
-				return minus ? -num : num;
+			while (true) {
+				if (b >= '0' && b <= '9') {
+					num = num * 10 + (b - '0');
+				} else {
+					return minus ? -num : num;
+				}
+				b = readByte();
 			}
-			b = readByte();
+		}
+
+		public long nextLong() {
+			long num = 0;
+			int b;
+			boolean minus = false;
+			while ((b = readByte()) != -1 && !((b >= '0' && b <= '9') || b == '-'))
+				;
+			if (b == '-') {
+				minus = true;
+				b = readByte();
+			}
+
+			while (true) {
+				if (b >= '0' && b <= '9') {
+					num = num * 10 + (b - '0');
+				} else {
+					return minus ? -num : num;
+				}
+				b = readByte();
+			}
 		}
 	}
 }

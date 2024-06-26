@@ -18,67 +18,64 @@ import java.util.Scanner;
 import java.util.StringTokenizer;
 
 
- class EIPEOYMK {
+ class EIFBF {
 
     static InputReader reader = new InputReader(System.in);
     static StringBuffer stringBuffer = new StringBuffer();
-
+    static int maxId = 0;
     public static void main(String[] args) throws IOException {
         int n = reader.nextInt();
         int m = reader.nextInt();
         
+        List<Node> listA = new ArrayList<>();
         Node[] graph = readGraph(n, m);
-        int u = reader.nextInt();
-        int q = reader.nextInt();
-       
-        bfs(graph[u]);
-        for (int i = 0; i < q; i++) {
-            int k = reader.nextInt();
-            List<Node> list = map.get(k);
-            
-            if(list == null) {
-                stringBuffer.append("-1");
-            }else {
-                list.sort((n1,n2) -> Integer.compare(n1.id, n2.id));
-                for (Node node : list) {
-                    stringBuffer.append(node.id).append(" ");
-                }
+        for (int i = 1 ; i < graph.length; i++) {
+            int countMale = 0;
+            int countFemale = 0;
+            if (graph[i].visit == false) {
+                List<Node> verticeComponent = new ArrayList<>();
+                dfs(graph[i],verticeComponent);
                 
+                for (int j = 0; j <verticeComponent.size(); j++) {
+                    if(verticeComponent.get(j).gender.equalsIgnoreCase("Nam")) {
+                        countMale++;
+                    }else {
+                        countFemale ++;
+                    }
+                }
+                Node vertex = new Node(maxId, countMale, countFemale);
+                listA.add(vertex);
+                maxId = 0;
             }
+        }
+        listA.sort((o1, o2) -> Integer.compare(o1.id, o2.id) );
+        for (int i = 0; i < listA.size(); i++) {
+            stringBuffer.append(listA.get(i).id + " " + listA.get(i).countMale + " " +listA.get(i).countFemale);
             stringBuffer.append("\n");
         }
-        System.out.println(stringBuffer);   
+        System.out.println(stringBuffer);
     }
-    static HashMap<Integer, List<Node>> map = new HashMap<>();
-    
-    
-	static void bfs(Node v) {
-		Queue<Node> q = new ArrayDeque<>();
-		q.add(v);
-		v.visit = true;
-		while(!q.isEmpty()) {
-			Node w = q.poll();
-			for (Node x : w.listNode) {
-				if(x.visit == false) {
-					x.level = w.level+1;
-					List<Node> list = map.get(x.level);
-	                if(list == null) {
-	                    list = new ArrayList<>();
-	                    map.put(x.level,list);
-	                }
-	                list.add(x);
-					x.visit = true;
-					q.add(x);
-				}
-			}
-		}
-	}
+
+    static void dfs(Node v, List<Node> component) {
+        v.visit = true;
+        component.add(v);
+        if(v.id > maxId) {
+            maxId = v.id;
+        }
+        for (Node w : v.listNode) {
+            if(w.visit == false) {
+                dfs(w,component );
+            }
+        }
+    }
+
 
     static Node[] readGraph(int n, int m) {
-        Node[] nodes = new Node[n];
-        for (int i = 0; i < nodes.length; i++) {
-            nodes[i] = new Node(i);
-        }
+        Node[] nodes = new Node[n + 1];
+        for (int i = 1; i < nodes.length; i++) {
+            String gender = reader.next();
+            nodes[i] = new Node(i,gender);
+        } 
         for (int i = 0; i < m; i++) {
             int u = reader.nextInt();
             int v = reader.nextInt();
@@ -91,12 +88,20 @@ import java.util.StringTokenizer;
 
     static class Node {
         private int id;
+        private String gender;
         private boolean visit;
-        private int level;
+        private int countMale;
+        private int countFemale;
         List<Node> listNode = new ArrayList<>();
 
-        public Node(int id) {
+        public Node(int id, String gender) {
             this.id = id;
+            this.gender = gender;;
+        }
+        public Node(int id, int countMale, int countFemale) {
+            this.id = id;
+            this.countMale = countMale;
+            this.countFemale = countFemale;
         }
 
         public void addNode(Node n) {
@@ -158,3 +163,4 @@ import java.util.StringTokenizer;
         }
     }
 }
+

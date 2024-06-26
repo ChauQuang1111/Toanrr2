@@ -1,19 +1,95 @@
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.InputMismatchException;
 import java.util.List;
+import java.util.Queue;
+import java.util.Set;
 
-public class test {
+class EIFOLTRE {
 	static InputReader reader;
-	public static void main(String[] args) {
-		int sum=0;
-		for (int i=1; i<=10; i++) {
-				sum+=Math.pow(2, i);
+	static StringBuilder sb;
+	public static void main(String[] args) throws IOException {
+		reader = new InputReader(System.in);
+		sb = new StringBuilder();
+		List<Vertex> graph = readGraph();
+		String firstVertice = reader.next();
+		int level=0;
+		for (Vertex v: graph) {
+			if (v.name.equals(firstVertice)) {
+				DFS(v,level);
+			}
 		}
-		System.out.println(sum);
+		System.out.println(sb);
 	}
+	static void DFS(Vertex v, int level) {
+		v.visited = true;
+		for (int i=0; i<level; i++) {
+			sb.append("---");
+		}
+		level++;
+		sb.append("-");
+		sb.append(v+"\n");
+		for (Vertex w : v.adjecentVertices) {
+			if(w.visited == false) {
+				DFS(w, level);
+			}
+		}
+	}
+	static List<Vertex> readGraph() {
+		int nVertices = reader.nextInt();
+		HashMap<String, Vertex> tree = new HashMap<>();
+		for (int i=0; i<nVertices-1; i++) {
+			String a = reader.next();
+			if (!tree.containsKey(a)) {
+				Vertex A = new Vertex(a);
+				tree.put(a, A);
+			}
+			String b = reader.next();
+			if (!tree.containsKey(b)) {
+				Vertex B = new Vertex(b);
+				tree.put(b, B);
+			}
+			tree.get(a).addAdjecentVertex(tree.get(b));
+			tree.get(b).addAdjecentVertex(tree.get(a));
+		}
+		List<Vertex> vertices = new ArrayList<>(tree.values());
+		for (Vertex v:vertices) {
+			v.adjecentVertices.sort((s1,s2) -> {
+				int compare = s1.name.compareToIgnoreCase(s2.name);
+				return compare;
+			});
+		}
+		return vertices;
+	}
+
+	static class Vertex {
+		public String name;
+		public boolean visited;
+		public List<Vertex> adjecentVertices = new ArrayList<Vertex>();
+
+		public Vertex(String name) {
+			this.name = name;
+		}
+
+		public void addAdjecentVertex(Vertex vertex) {
+			adjecentVertices.add(vertex);
+		}
+
+		public int getDegree() {
+			return adjecentVertices.size();
+		}
+
+		@Override
+		public String toString() {
+			return name + "";
+		}
+
+	}
+
 	static class InputReader {
 		private byte[] inbuf = new byte[2 << 23];
 		public int lenbuf = 0, ptrbuf = 0;

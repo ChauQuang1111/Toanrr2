@@ -5,14 +5,68 @@ import java.util.ArrayList;
 import java.util.InputMismatchException;
 import java.util.List;
 
-public class test {
+public class EIMULEMA {
 	static InputReader reader;
-	public static void main(String[] args) {
-		int sum=0;
-		for (int i=1; i<=10; i++) {
-				sum+=Math.pow(2, i);
+	static StringBuilder sb = new StringBuilder();
+	public static void main(String[] args) throws IOException {
+		reader = new InputReader(System.in);
+		int nNode = reader.nextInt();
+		Node[]graph = readGraph(nNode);
+		dfs(graph[0]);
+		for (Node n: graph) {
+			sb.append(n).append("\n");
 		}
-		System.out.println(sum);
+		System.out.println(sb);
+	}
+	public static void dfs(Node n) {
+		n.visited = true;
+		for(Node m:n.adjecent) {
+			if(!m.visited) {
+				dfs(m);
+				n.hoahong+=m.hoahong/2;
+			}
+		}
+	}
+	
+	public static Node[] readGraph(int nNode) {
+		Node[] graph = new Node[nNode];
+		for(int i=0; i<nNode; i++) {
+			int doanhthu = reader.nextInt();
+			
+			graph[i] = new Node(i, (int)Math.floor(doanhthu*0.15));
+		}
+		for(int i=0; i<nNode-1; i++) {
+			int u = reader.nextInt();
+			int v =reader.nextInt();
+			
+			graph[u].addAdjecent(graph[v]);
+		}
+		return graph;
+	}
+	
+	static class Node {
+		private int id;
+		private int hoahong;
+		private boolean visited;
+		List<Node> adjecent = new ArrayList<Node>();
+		
+		public Node(int id, int hoahong) {
+			super();
+			this.id = id;
+			this.hoahong = hoahong;
+		}
+		
+		public void addAdjecent(Node n) {
+			adjecent.add(n);
+		}
+
+		@Override
+		public String toString() {
+			return id + " " + hoahong;
+		}
+		
+		
+		
 	}
 	static class InputReader {
 		private byte[] inbuf = new byte[2 << 23];

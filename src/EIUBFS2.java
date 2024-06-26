@@ -1,19 +1,85 @@
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.InputMismatchException;
-import java.util.List;
+import java.util.*;
 
-public class test {
+class EIUBFS2 {
 	static InputReader reader;
-	public static void main(String[] args) {
-		int sum=0;
-		for (int i=1; i<=10; i++) {
-				sum+=Math.pow(2, i);
-		}
-		System.out.println(sum);
+	static StringBuilder sb = new StringBuilder();
+	public static void main(String[] args) throws IOException {
+		reader = new InputReader(System.in);
+		Vertex[] graph = readGraph();
+		BFS(graph[0]);
+		System.out.println(sb);
+		
 	}
+	static void BFS(Vertex v) {
+		Queue<Vertex> q = new ArrayDeque<Vertex>();
+		q.add(v);
+		v.visited = true;
+		while (q.isEmpty()==false) {
+			Vertex w = q.remove();
+			sb.append(w.id+"\n");
+			for (Vertex x : w.adjecentVertices) {
+				if (x.visited == false) {
+					x.visited = true;
+					q.add(x);
+				}
+			}
+		}
+	}
+	static Vertex[] readGraph() {
+		int nVertices = reader.nextInt();
+		int nEdges = reader.nextInt();
+
+		//Tao ra mảng để lưu các đỉnh và khởi tạo các đỉnh
+		Vertex[] vertices = new Vertex[nVertices + 1];
+		for (int i = 0; i <= nVertices; ++i) {
+			vertices[i] = new Vertex(i);
+		}
+		
+		//Doc lần lượt các cạnh
+		for (int i = 0; i < nEdges; ++i) {
+			int a = reader.nextInt();
+			int b = reader.nextInt();
+
+			//Đồ thị vô hướng nên cạnh  a-b nghĩa là: a kề của b, 
+			//b kề của a
+			vertices[a].addAdjecentVertex(vertices[b]);
+			vertices[b].addAdjecentVertex(vertices[a]);
+		}
+		// Sắp xếp đỉnh kề theo id bé đến lớn
+		for (int i=0; i<=nVertices; i++) {
+			vertices[i].adjecentVertices.sort((v1, v2)-> Integer.compare(v1.id, v2.id));
+		}
+
+		return vertices;
+	}
+
+	static class Vertex {
+		public int id;
+		public boolean visited;
+		public List<Vertex> adjecentVertices = new ArrayList<Vertex>();
+
+		public Vertex(int id) {
+			this.id = id;
+		}
+
+		public void addAdjecentVertex(Vertex vertex) {
+			adjecentVertices.add(vertex);
+		}
+
+		public int getDegree() {
+			return adjecentVertices.size();
+		}
+
+		@Override
+		public String toString() {
+			return id + "";
+		}
+
+	}
+
 	static class InputReader {
 		private byte[] inbuf = new byte[2 << 23];
 		public int lenbuf = 0, ptrbuf = 0;

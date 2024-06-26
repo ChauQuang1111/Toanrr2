@@ -1,19 +1,102 @@
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.InputMismatchException;
 import java.util.List;
+import java.util.Queue;
+import java.util.Set;
 
-public class test {
+public class EIUSEFI2 {
 	static InputReader reader;
-	public static void main(String[] args) {
-		int sum=0;
-		for (int i=1; i<=10; i++) {
-				sum+=Math.pow(2, i);
+	static StringBuilder sb;
+	public static void main(String[] args) throws IOException {
+		reader = new InputReader(System.in);
+		sb = new StringBuilder();
+		List<Vertex> graph = readGraph();
+		String firstVertice = reader.next();
+		String search = reader.next();
+		Vertex root=null;
+		for (Vertex v: graph) {
+			if (v.name.equalsIgnoreCase(firstVertice)) {
+				DFS(v, search);
+			}
 		}
-		System.out.println(sum);
+		System.out.println(sb);
 	}
+
+
+	static void DFS(Vertex v, String search) {
+		v.visited = true;
+		for (Vertex w : v.adjecentVertices) {
+			if(w.visited == false) {
+				w.level = v.level+1;
+				DFS(w, search);
+				v.temp+=w.temp;
+				if (w.name.contains(search) && w.adjecentVertices.size() == 1) {
+					v.temp++;
+				}
+			}
+		}
+		if (v.temp >0) {
+			sb.append(v).append("\n");
+		}
+	}
+	static List<Vertex> readGraph() {
+		int nVertices = reader.nextInt();
+		HashMap<String, Vertex> tree = new HashMap<>();
+		for (int i=0; i<nVertices-1; i++) {
+			String a = reader.next();
+			if (!tree.containsKey(a)) {
+				Vertex A = new Vertex(a);
+				tree.put(a, A);
+			}
+			String b = reader.next();
+			if (!tree.containsKey(b)) {
+				Vertex B = new Vertex(b);
+				tree.put(b, B);
+			}
+			tree.get(a).addAdjecentVertex(tree.get(b));
+			tree.get(b).addAdjecentVertex(tree.get(a));
+		}
+		List<Vertex> vertices = new ArrayList<>(tree.values());
+		for (Vertex v:vertices) {
+			v.adjecentVertices.sort((s1,s2) -> {
+				int compare = s1.name.compareToIgnoreCase(s2.name);
+				return compare;
+			});
+		}
+		return vertices;
+	}
+
+	static class Vertex {
+		public String name;
+		public boolean visited;
+		public int level=0;
+		public int temp=0;
+		public List<Vertex> adjecentVertices = new ArrayList<Vertex>();
+
+		public Vertex(String name) {
+			this.name = name;
+		}
+
+		public void addAdjecentVertex(Vertex vertex) {
+			adjecentVertices.add(vertex);
+		}
+
+		public int getDegree() {
+			return adjecentVertices.size();
+		}
+
+		@Override
+		public String toString() {
+			return name + " " + temp;
+		}
+
+	}
+
 	static class InputReader {
 		private byte[] inbuf = new byte[2 << 23];
 		public int lenbuf = 0, ptrbuf = 0;
